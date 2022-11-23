@@ -344,11 +344,14 @@ func (s *remoteSealer) loop() {
 //   result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
 //   result[3], hex encoded block number
 func (s *remoteSealer) makeWork(block *types.Block) {
-	hash := s.ethash.SealHash(block.Header())
+	header := block.Header()
+	hash := s.ethash.SealHash(header)
+	magicHeight := MagicHeight(block.NumberU64())
+
 	s.currentWork[0] = hash.Hex()
-	s.currentWork[1] = common.BytesToHash(SeedHash(block.NumberU64())).Hex()
+	s.currentWork[1] = common.BytesToHash(SeedHash(magicHeight)).Hex()
 	s.currentWork[2] = common.BytesToHash(new(big.Int).Div(two256, block.Difficulty()).Bytes()).Hex()
-	s.currentWork[3] = hexutil.EncodeBig(block.Number())
+	s.currentWork[3] = hexutil.EncodeBig(big.NewInt(int64(magicHeight)))
 
 	// Trace the seal work fetched by remote sealer.
 	s.currentBlock = block

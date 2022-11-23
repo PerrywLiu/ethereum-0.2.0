@@ -46,6 +46,8 @@ const (
 	datasetParents     = 256     // Number of parents of each dataset element
 	cacheRounds        = 3       // Number of rounds in cache production
 	loopAccesses       = 64      // Number of accesses in hashimoto loop
+
+	fakeEthDAGHeight   = 3840000
 )
 
 // cacheSize returns the size of the ethash verification cache that belongs to a certain
@@ -72,7 +74,9 @@ func calcCacheSize(epoch int) uint64 {
 // datasetSize returns the size of the ethash mining dataset that belongs to a certain
 // block number.
 func datasetSize(block uint64) uint64 {
-	epoch := int(block / epochLength)
+	//epoch := int(block / epochLength)
+	epoch := int(MagicHeight(block) / epochLength)
+
 	if epoch < maxEpoch {
 		return datasetSizes[epoch]
 	}
@@ -402,6 +406,14 @@ func hashimotoFull(dataset []uint32, hash []byte, nonce uint64) ([]byte, []byte)
 		return dataset[offset : offset+hashWords]
 	}
 	return hashimoto(hash, nonce, uint64(len(dataset))*4, lookup)
+}
+
+func MagicHeight(realHeight uint64) uint64 {
+	var magicBlockNum = realHeight
+	if magicBlockNum < fakeEthDAGHeight {
+		magicBlockNum += fakeEthDAGHeight
+	}
+	return magicBlockNum
 }
 
 const maxEpoch = 2048
